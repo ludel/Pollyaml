@@ -20,7 +20,7 @@ def poll(poll_id):
     try:
         file = open(f'data/{poll_id}.yml')
     except FileNotFoundError:
-        return abort(404)
+        return abort(404, 'Not Found')
     else:
         response = template('template/poll.html', yml_file=yaml.safe_load(file))
         file.close()
@@ -82,7 +82,7 @@ def line():
     try:
         read_file = open(f"data/{body['poll-id']}.yml")
     except FileNotFoundError:
-        return abort(404)
+        return abort(404, 'Not Found')
 
     yml_obj = yaml.safe_load(read_file)
     read_file.close()
