@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 
 import yaml
-from bottle import get, post, run, abort, static_file, template, request, redirect
+from bottle import get, post, run, abort, static_file, template, request, redirect, default_app
 
 DEBUG = os.environ.get('DEBUG', False)
 
@@ -104,4 +104,7 @@ def static(path):
     return static_file(path, root='static')
 
 
-run(host='localhost', port=8080, debug=DEBUG)
+if DEBUG:
+    run(host='localhost', port=8080, debug=DEBUG)
+else:
+    app = default_app()
