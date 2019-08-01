@@ -1,0 +1,177 @@
+% rebase('template/base.html')
+
+<div class="container">
+    <div class="columns">
+        <div class="column col-4 col-xs-12">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title text-center">
+                        <h2><u>{{ yml_file['title'] }}</u></h2>
+
+                        <figure class="avatar avatar-xl text-uppercase" data-initial="{{yml_file['author'][0]}}"
+                                style="background-color: #5755d9;"></figure>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+
+                    <ul class="tab tab-block">
+                        <li class="tab-item active"><a href="#panels">Informations</a></li>
+                        <li class="tab-item"><a href="#panels">Comments (WIP)</a></li>
+                    </ul>
+
+                    <div class="tile tile-centered mt-2">
+                        <div class="tile-content">
+                            <div class="tile-title text-bold">ID</div>
+                            <div class="tile-subtitle">{{ yml_file['poll-id'] }}</div>
+                        </div>
+                    </div>
+
+                    <div class="tile tile-centered mt-2">
+                        <div class="tile-content">
+                            <div class="tile-title text-bold">Author</div>
+                            <div class="tile-subtitle">{{ yml_file['author'] }}</div>
+                        </div>
+                    </div>
+
+                    <div class="tile tile-centered mt-2">
+                        <div class="tile-content">
+                            <div class="tile-title text-bold">Creation date</div>
+                            <div class="tile-subtitle">{{ yml_file['datetime'].strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-footer">
+                    <button class="btn btn-primary btn-block" id="copy">
+                        <i class="icon icon icon-copy"></i> Copy the poll link
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="column col-8 col-xs-12">
+            <div class="panel">
+                <div class="panel-body">
+                    <table class="table text-center">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            % for col in yml_file['columns']:
+                            <th>{{ col }}</th>
+                            % end
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        % for key, value in yml_file.get('lines', {}).items():
+                        <tr>
+                            <td>{{ key }}</td>
+                            % for col in value:
+                            <td>
+
+                                % if col is True:
+                                <button class="btn btn-success btn-lg btn-action c-not-allowed">
+                                    <i class="icon icon-check"></i>
+                                </button>
+                                % elif col is False:
+                                <button class="btn btn-error btn-lg btn-action c-not-allowed">
+                                    <i class="icon icon-cross"></i>
+                                </button>
+                                % else:
+                                <button class="btn btn-primary btn-lg btn-action c-not-allowed">
+                                    <i class="icon icon-minus"></i>
+                                </button>
+                                % end
+                            </td>
+                            % end
+                        </tr>
+                        % end
+
+                        <tr>
+                            <td style="max-width: 100px">
+                                <input class="form-input" type="text" placeholder="Name" name="name" id="name">
+                            </td>
+                            % for index, item in enumerate(yml_file['columns']):
+                            <td>
+                                <button class="btn btn-primary btn-lg c-hand" onclick="switchBtn(this, '{{index}}')">
+                                    <i class="icon icon-minus"></i>
+                                </button>
+                            </td>
+                            % end
+                            <td>
+                                <a class="btn btn-success" id="save" >Save</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const btnCopy = document.getElementById('copy');
+    const btnSave = document.getElementById('save');
+    const body = {'name': null, 'poll-id': "{{ yml_file['poll-id'] }}"};
+
+
+    btnCopy.addEventListener('click', function () {
+        btnCopy.innerText = 'Copied !';
+        setTimeout(function () {
+            btnCopy.innerText = 'Copy the poll link'
+        }, 1000);
+
+        const dummy = document.createElement('input'),
+            text = window.location.href;
+
+        document.body.appendChild(dummy);
+        dummy.value = text;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+    });
+
+    btnSave.addEventListener('click', function () {
+        const inputName = document.getElementById('name');
+        body['name'] = inputName.value;
+
+        if(body['name'])
+            fetch('/line', {method: 'POST', body: JSON.stringify(body)}).then(function (res) {
+                window.location.reload(false);
+            });
+        else
+            inputName.classList.add('is-error')
+    });
+
+    function switchBtn(btn, index) {
+        const icon = btn.firstElementChild;
+
+        switch (icon.classList[1]) {
+            case 'icon-minus':
+                switchCss(btn, icon, 'icon-minus', 'icon-check', 'btn-primary', 'btn-success');
+                body[index] = true;
+                break;
+            case 'icon-check':
+                switchCss(btn, icon, 'icon-check', 'icon-cross', 'btn-success', 'btn-error');
+                body[index] = false;
+                break;
+            case 'icon-cross':
+                switchCss(btn, icon, 'icon-cross', 'icon-minus', 'btn-error', 'btn-primary');
+                body[index] = null;
+                break;
+        }
+
+    }
+
+    function switchCss(btn, icon, iconRemove, iconAdd, btnRemove, btnAdd) {
+        icon.classList.remove(iconRemove);
+        icon.classList.add(iconAdd);
+
+        btn.classList.remove(btnRemove);
+        btn.classList.add(btnAdd);
+    }
+
+
+</script>

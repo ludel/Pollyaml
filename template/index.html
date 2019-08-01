@@ -1,0 +1,64 @@
+% rebase('template/base.html')
+
+<div class="container">
+    <div class="columns">
+
+        <div class="column col-6 col-xs-12">
+            <form class="form-group" action="/export" method="post">
+
+                <h3><label class="form-label float-left" for="setting">Setting</label></h3>
+                <input type="submit" class="btn btn-primary btn-lg float-right mb-1" id="export" value="Create"/>
+
+                <textarea class="form-input is-success" id="setting" rows="10" name="yml">title: Birthday party
+author: Karen
+
+columns:
+  - December 15
+  - December 20
+  - December 25
+</textarea>
+            </form>
+        </div>
+
+        <div class="column col-6 col-xs-12" id="table"></div>
+    </div>
+</div>
+
+<script>
+    const setting = document.getElementById('setting');
+    const table = document.getElementById('table');
+    const exportBtn = document.getElementById('export');
+    const settingInput = document.getElementById('setting');
+    let timeout = null;
+
+    getTable();
+
+    settingInput.addEventListener('keyup', function () {
+        clearTimeout(timeout);
+        timeout = setTimeout(getTable, 800);
+    });
+
+    function getTable() {
+        fetch('/table', {method: 'POST', body: setting.value})
+            .then(function (res) {
+                if (res.status === 200) {
+                    res.text().then(function (html) {
+                        table.innerHTML = html;
+                    });
+
+                    switchState(setting, 'is-error', 'is-success');
+                    exportBtn.classList.remove('disabled')
+                } else {
+                    switchState(setting, 'is-success', 'is-error');
+                    exportBtn.classList.add('disabled')
+                }
+            })
+    }
+
+    function switchState(element, oldState, newState) {
+        element.classList.remove(oldState);
+        element.classList.add(newState);
+    }
+
+
+</script>

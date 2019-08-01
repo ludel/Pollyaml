@@ -1,0 +1,18 @@
+author: Karen
+columns:
+- December 15
+- December 20
+- December 25
+comments: null
+datetime: 2019-08-01 23:20:35.448195
+lines:
+  Bob:
+  - false
+  - true
+  - null
+  Lazar:
+  - true
+  - false
+  - true
+poll-id: 401ae4b044
+title: Birthday party
