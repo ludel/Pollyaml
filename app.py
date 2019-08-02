@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 
 import yaml
-from bottle import get, post, run, abort, static_file, template, request, redirect, default_app
+from bottle import get, post, run, abort, template, request, redirect, default_app, static_file
 
 DEBUG = os.environ.get('DEBUG', False)
 
@@ -21,9 +21,9 @@ def poll(poll_id):
         file = open(f'data/{poll_id}.yml')
     except FileNotFoundError:
         return abort(404, 'Not Found')
-    else:
-        response = template('template/poll.html', yml_file=yaml.safe_load(file))
-        file.close()
+
+    response = template('template/poll.html', yml_file=yaml.safe_load(file))
+    file.close()
 
     return response
 
@@ -99,9 +99,9 @@ def line():
     return 'ok'
 
 
-@get('/static/<path:path>')
-def static(path):
-    return static_file(path, root='static')
+@get('/favicon.ico')
+def get_favicon():
+    return static_file('favicon.ico', root='static')
 
 
 if DEBUG:
