@@ -5,6 +5,7 @@ Create a poll quickly and easily with the power of the YAML markup language.
 [Website](https://pollyaml.com/)
 
 ![capture.jpg](https://raw.githubusercontent.com/ludel/pollyaml/master/screenshot-index.jpg)
+___
 ![capture.jpg](https://raw.githubusercontent.com/ludel/pollyaml/master/screenshot-poll.jpg)
 
 ## Tech Stack
