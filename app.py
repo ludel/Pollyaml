@@ -21,8 +21,9 @@ def poll(poll_id):
         file = open(f'data/{poll_id}.yml')
     except FileNotFoundError:
         return abort(404, 'Not Found')
-
-    response = template('template/poll.html', yml_file=yaml.safe_load(file))
+    load = yaml.safe_load(file)
+    print(load)
+    response = template('template/poll.html', yml_file=load)
     file.close()
 
     return response
@@ -78,22 +79,24 @@ def export():
 @post('/line')
 def line():
     body = json.loads(request.body.read())
+    poll_id = body.pop('poll-id')
 
     try:
-        read_file = open(f"data/{body['poll-id']}.yml")
+        poll_file = open(f"data/{poll_id}.yml")
     except FileNotFoundError:
         return abort(404, 'Not Found')
 
-    yml_obj = yaml.safe_load(read_file)
-    read_file.close()
+    yml_obj = yaml.safe_load(poll_file)
+    poll_file.close()
+    print(body)
+    for line_name, values in body.items():
+        default_values = [None] * len(yml_obj['columns'])
 
-    values = []
-    for i in range(len(yml_obj['columns'])):
-        values.append(body.get(str(i), None))
+        for i, v in enumerate(values):
+            default_values[i] = v
 
-    yml_obj['lines'].update({body['name']: values})
-
-    with open(f"data/{body['poll-id']}.yml", 'w') as file:
+        yml_obj['lines'].update({line_name: default_values})
+    with open(f"data/{poll_id}.yml", 'w') as file:
         file.write(yaml.safe_dump(yml_obj))
 
     return 'ok'

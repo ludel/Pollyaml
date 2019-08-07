@@ -64,27 +64,34 @@
                         </thead>
 
                         <tbody>
-                        % for key, value in yml_file.get('lines', {}).items():
+                        % for line_name, values in yml_file.get('lines', {}).items():
                         <tr>
-                            <td>{{ key }}</td>
-                            % for col in value:
+                            <td>{{ line_name }}</td>
+                            % for index, col in enumerate(values):
                             <td>
-
                                 % if col is True:
-                                <button class="btn btn-success btn-lg btn-action c-not-allowed">
+                                <button class="btn btn-success btn-lg btn-action c-not-allowed" data-index="{{index}}"
+                                        data-name="{{line_name}}">
                                     <i class="icon icon-check"></i>
                                 </button>
                                 % elif col is False:
-                                <button class="btn btn-error btn-lg btn-action c-not-allowed">
+                                <button class="btn btn-error btn-lg btn-action c-not-allowed" data-index="{{index}}"
+                                        data-name="{{line_name}}">
                                     <i class="icon icon-cross"></i>
                                 </button>
                                 % else:
-                                <button class="btn btn-primary btn-lg btn-action c-not-allowed">
+                                <button class="btn btn-primary btn-lg btn-action c-not-allowed" data-index="{{index}}"
+                                        data-name="{{line_name}}">
                                     <i class="icon icon-minus"></i>
                                 </button>
                                 % end
                             </td>
                             % end
+                            <td>
+                                <button class="btn btn-lg btn-link">
+                                    <i class="icon icon-edit text-dark"></i>
+                                </button>
+                            </td>
                         </tr>
                         % end
 
@@ -94,13 +101,13 @@
                             </td>
                             % for index, item in enumerate(yml_file['columns']):
                             <td>
-                                <button class="btn btn-primary btn-lg c-hand" onclick="switchBtn(this, '{{index}}')">
+                                <button class="btn btn-primary btn-lg c-hand" id="status" data-index="{{index}}">
                                     <i class="icon icon-minus"></i>
                                 </button>
                             </td>
                             % end
                             <td>
-                                <a class="btn btn-success" id="save" >Save</a>
+                                <a class="btn btn-success" id="save">Save</a>
                             </td>
                         </tr>
                         </tbody>
@@ -114,8 +121,16 @@
 <script>
     const btnCopy = document.getElementById('copy');
     const btnSave = document.getElementById('save');
-    const body = {'name': null, 'poll-id': "{{ yml_file['poll-id'] }}"};
+    const btnEdit = document.getElementsByClassName('btn-link');
+    const btnStatus = document.getElementsByClassName('c-hand');
 
+    const poll_id = "{{ yml_file['poll-id'] }}";
+    let body = {'poll-id': poll_id};
+
+    for (const btn of btnStatus)
+        btn.addEventListener('click', switchBtn);
+    for (const btn of btnEdit)
+        btn.addEventListener('click', edit);
 
     btnCopy.addEventListener('click', function () {
         btnCopy.innerText = 'Copied !';
@@ -135,42 +150,67 @@
 
     btnSave.addEventListener('click', function () {
         const inputName = document.getElementById('name');
-        body['name'] = inputName.value;
+        body[inputName.value] = body[inputName.value] || [];
 
-        if(body['name'])
-            fetch('/line', {method: 'POST', body: JSON.stringify(body)}).then(function (res) {
+        if (inputName.value)
+            fetch('/line', {method: 'POST', body: JSON.stringify(body)}).then(function () {
                 window.location.reload(false);
             });
         else
             inputName.classList.add('is-error')
     });
 
-    function switchBtn(btn, index) {
+
+    function edit() {
+        this.firstElementChild.classList.replace('icon-edit', 'icon-check');
+        const trItem = this.parentNode.parentNode;
+
+        for (const tdChildren of [...trItem.children].slice(1, -1)) {
+            let statusBtn = tdChildren.firstElementChild;
+            statusBtn.classList.replace('c-not-allowed', 'c-hand');
+            statusBtn.onclick = switchBtn;
+
+            statusBtn.classList.replace('btn-success', 'btn-primary');
+            statusBtn.classList.replace('btn-error', 'btn-primary');
+            statusBtn.innerHTML = '<i class="icon icon-minus"></i>'
+        }
+        trItem.classList.add('active');
+
+        this.onclick = function () {
+            const line_name = trItem.firstElementChild.innerText;
+            body[line_name] = body[line_name] || [];
+
+            fetch('/line', {method: 'POST', body: JSON.stringify(body)}).then(function () {
+                window.location.reload(false);
+            });
+        }
+    }
+
+    function switchBtn() {
+        const btn = this;
+        const index = btn.dataset.index;
+        const name = btn.dataset.name || document.getElementById('name').value;
         const icon = btn.firstElementChild;
+
+        body[name] = body[name] || [];
 
         switch (icon.classList[1]) {
             case 'icon-minus':
-                switchCss(btn, icon, 'icon-minus', 'icon-check', 'btn-primary', 'btn-success');
-                body[index] = true;
+                icon.classList.replace('icon-minus', 'icon-check');
+                btn.classList.replace('btn-primary', 'btn-success');
+                body[name][index] = true;
                 break;
             case 'icon-check':
-                switchCss(btn, icon, 'icon-check', 'icon-cross', 'btn-success', 'btn-error');
-                body[index] = false;
+                icon.classList.replace('icon-check', 'icon-cross');
+                btn.classList.replace('btn-success', 'btn-error');
+                body[name][index] = false;
                 break;
             case 'icon-cross':
-                switchCss(btn, icon, 'icon-cross', 'icon-minus', 'btn-error', 'btn-primary');
-                body[index] = null;
+                icon.classList.replace('icon-cross', 'icon-minus');
+                btn.classList.replace('btn-error', 'btn-primary');
+                body[name][index] = null;
                 break;
         }
-
-    }
-
-    function switchCss(btn, icon, iconRemove, iconAdd, btnRemove, btnAdd) {
-        icon.classList.remove(iconRemove);
-        icon.classList.add(iconAdd);
-
-        btn.classList.remove(btnRemove);
-        btn.classList.add(btnAdd);
     }
 
 
